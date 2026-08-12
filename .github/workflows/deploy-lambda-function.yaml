@@ -48,6 +48,7 @@ permissions:
   contents: read
 
 env:
+  INPUT_ACTION: ${{ github.event.inputs.INPUT_FUNCTION }}
   INPUT_ACTION: ${{ github.event.inputs.INPUT_ACTION || 'build-and-deploy' }} #Default needed since the workflow will not use the input default when run on-push.
   SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
