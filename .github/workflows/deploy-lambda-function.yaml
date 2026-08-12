@@ -140,9 +140,9 @@ jobs:
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          role-to-assume: $ {{ env.AWS_OIDC_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          source-account-id: 104322896078
+          allowed-account-ids: 104322896078
 
         # Deploy code to the existing Lambda function.
       - name: Deploy code to Lambda function
