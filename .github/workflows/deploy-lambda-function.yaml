@@ -166,7 +166,7 @@ jobs:
       - name: Show Lambda information
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
-          aws lambda get-function --function-name "${LAMBDA_FUNCTION_NAME}" --query 
+          aws lambda get-function --function-name "${LAMBDA_FUNCTION_NAME}" --query \
           'Configuration.{
               FunctionName: FunctionName,
               Runtime: Runtime,
