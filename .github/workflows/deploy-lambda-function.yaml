@@ -122,6 +122,8 @@ jobs:
           # Exclude unnecessary files and directories from the deployment package.
           zip -r "${LAMBDA_DEPLOYMENT_PACKAGE}" . -x ".git/*" ".github/*" "test/*" "${LAMBDA_DEPLOYMENT_PACKAGE}"
 
+          ls -la
+
           # Validate deployment file creation.
           if [ -f "${LAMBDA_DEPLOYMENT_PACKAGE}" ]; then
             echo "Error: Deployment package not created!"
