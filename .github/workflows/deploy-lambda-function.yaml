@@ -58,7 +58,7 @@ env:
   FUNCTION_2_NAME: auth-module
   FUNCTION_REPOSITORY_PATH: function-1
   NODEJS_VERSION: 24
-  AWS_OIDC_ROLE_ARN: arn:aws:iam::104322896078:role/CustomRoleLambdaGithubCodeDeploy
+  AWS_OIDC_ROLE_ARN: CustomRoleLambdaGithubCodeDeploy
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
 
 jobs:
@@ -135,10 +135,10 @@ jobs:
             ls -la | grep "${LAMBDA_DEPLOYMENT_PACKAGE}"
           fi
 
-      - name: Debug GitHub OIDC
-        uses: github/actions-oidc-debugger@main
-        with:
-          audience: sts.amazonaws.com
+      # - name: Debug GitHub OIDC
+      #   uses: github/actions-oidc-debugger@main
+      #   with:
+      #     audience: sts.amazonaws.com
 
         # Configure AWS credentials using GitHub OIDC.
       - name: Configure AWS credentials
