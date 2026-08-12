@@ -48,7 +48,7 @@ permissions:
   contents: read
 
 env:
-  INPUT_ACTION: ${{ github.event.inputs.INPUT_FUNCTION }}
+  INPUT_FUNCTION: ${{ github.event.inputs.INPUT_FUNCTION }}
   INPUT_ACTION: ${{ github.event.inputs.INPUT_ACTION || 'build-and-deploy' }} #Default needed since the workflow will not use the input default when run on-push.
   SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
@@ -74,6 +74,7 @@ jobs:
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
           elif [[ "${INPUT_FUNCTION}" == "function-2" ]]; then
+            echo "Selected function-2"
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
           else
