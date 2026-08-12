@@ -1,0 +1,165 @@
+name: Deploy Lambda
+
+on:
+  # push:
+  #   branches:
+  #     - develop
+
+  workflow_dispatch:
+    inputs:
+      #Input to select the action.
+      INPUT_FUNCTION:
+        description: 'Select which Lambda function'
+        required: true
+        type: choice
+        options:
+          - function-1
+          - function-2
+      #Input to run tests.
+      INPUT_ACTION:
+        description: 'Select action'
+        required: true
+        default: build-and-deploy
+        type: choice
+        options:
+          - build
+          - build-and-deploy
+      #Input to run tests.
+      RUN_TESTS:
+        description: 'Run unit & coverage tests?'
+        required: true
+        default: false
+        type: choice
+        options:
+          - true
+          - false
+      #Input to scan with sonarqube.
+      SONAR_SCAN_ENABLE:
+        description: 'Scan with sonarqube?'
+        required: true
+        default: false
+        type: choice
+        options:
+          - true
+          - false
+
+permissions:
+  id-token: write # Allow the workflow to request an OIDC token for AWS authentication.
+  contents: read
+
+env:
+  INPUT_ACTION: ${{ github.event.inputs.INPUT_ACTION || 'build-and-deploy' }} #Default needed since the workflow will not use the input default when run on-push.
+  SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
+  RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
+  VERSION_FILE: package.json
+  AWS_REGION: ap-southeast-1
+  FUNCTION_1_NAME: health-check
+  FUNCTION_2_NAME: auth-module
+  FUNCTION_REPOSITORY_PATH: function-1
+  NODEJS_VERSION: 24
+  AWS_OIDC_ROLE_ARN: arn:aws:iam::104322896078:role/CustomRoleLambdaGithubCodeDeploy
+  LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
+
+jobs:
+  deploy:
+    name: Deploy Lambda function
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Select function
+        run: |
+          if [[ "${INPUT_FUNCTION}" == "function-1" ]]; then
+            echo "Selected function-1"
+            echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
+            echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
+          elif [[ "${INPUT_FUNCTION}" == "function-2" ]]; then
+            echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
+            echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
+          else
+            echo "Invalid function selection: "${INPUT_FUNCTION}""
+            exit 1
+          fi
+            
+        #Verify that the AWS CLI is configured correctly.
+      - name: Verify AWS CLI
+        run: |
+          aws --version
+
+        # Checkout code repository.
+      - name: Repository checkout
+        uses: actions/checkout@v5
+        with:
+          clean: true      #Cleans the workspace before checking out code.
+          fetch-depth: 0   #Required to push back
+
+        # Setup Nodejs environment.
+      - name: Setup Nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODEJS_VERSION }}
+          cache: npm
+
+        # Check Nodejs version.
+      - name: Check Nodejs
+        run: |
+          node -v
+          npm -v
+
+        # Install dependencies.
+      - name: Install dependencies
+        if: ${{ env.RUN_TESTS == 'false' }}
+        run: | 
+          cd ${FUNCTION_REPOSITORY_PATH}
+          npm ci --omit=dev
+
+        # Create the Lambda deployment package.
+      - name: Create Lambda deployment package
+        run: |
+          cd ${FUNCTION_REPOSITORY_PATH}
+          # Exclude unnecessary files and directories from the deployment package.
+          zip -r "${LAMBDA_DEPLOYMENT_PACKAGE}" . -x ".git/*" ".github/*" "test/*" "${LAMBDA_DEPLOYMENT_PACKAGE}"
+
+          # Validate deployment file creation.
+          if [ -f "${LAMBDA_DEPLOYMENT_PACKAGE}" ]; then
+            echo "Error: Deployment package not created!"
+            exit 1
+          elif [ -z "${LAMBDA_DEPLOYMENT_PACKAGE}" ]; then
+            echo "Error: Deployment package is empty!"
+            exit 1
+          else
+            ls -la | grep "${LAMBDA_DEPLOYMENT_PACKAGE}"
+          fi
+
+        # Configure AWS credentials using GitHub OIDC.
+      - name: Configure AWS credentials
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: $ {{ env.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+        # Deploy code to the existing Lambda function.
+      - name: Deploy code to Lambda function
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          cd ${FUNCTION_REPOSITORY_PATH}
+          aws lambda update-function-code --function-name "${LAMBDA_FUNCTION_NAME}" --zip-file "fileb://${LAMBDA_DEPLOYMENT_PACKAGE}" --publish
+
+        # Wait until the Lambda function has finished updating with the new code.
+      - name: Wait for Lambda function to update
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          aws lambda wait function-updated --function-name "${LAMBDA_FUNCTION_NAME}"
+
+        # Display information of the updated Lambda function.
+      - name: Show Lambda information
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          aws lambda get-function --function-name "${LAMBDA_FUNCTION_NAME}" --query 
+          'Configuration.{
+              FunctionName: FunctionName,
+              Runtime: Runtime,
+              Version: Version,
+              LastModified: LastModified,
+              CodeSize: CodeSize
+            }' --output table
