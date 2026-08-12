@@ -81,6 +81,8 @@ jobs:
             echo "Invalid function selection: "${INPUT_FUNCTION}""
             exit 1
           fi
+
+          echo "Role ARN: ${AWS_OIDC_ROLE_ARN}"
             
         #Verify that the AWS CLI is configured correctly.
       - name: Verify AWS CLI
@@ -140,6 +142,7 @@ jobs:
         with:
           role-to-assume: $ {{ env.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          source-account-id: 104322896078
 
         # Deploy code to the existing Lambda function.
       - name: Deploy code to Lambda function
