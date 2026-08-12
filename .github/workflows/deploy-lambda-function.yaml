@@ -154,7 +154,8 @@ jobs:
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
           cd ${FUNCTION_REPOSITORY_PATH}
-          aws lambda update-function-code --function-name "${LAMBDA_FUNCTION_NAME}" --zip-file "fileb://${LAMBDA_DEPLOYMENT_PACKAGE}" --publish
+          aws lambda update-function-code --function-name "${LAMBDA_FUNCTION_NAME}" --zip-file "fileb://${LAMBDA_DEPLOYMENT_PACKAGE}" --publish \
+          --query '{FunctionName:FunctionName,Version:Version,CodeSha256:CodeSha256}' --output table
 
         # Wait until the Lambda function has finished updating with the new code.
       - name: Wait for Lambda function to update
