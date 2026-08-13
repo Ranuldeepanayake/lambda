@@ -55,7 +55,9 @@ env:
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
   NODEJS_VERSION: 24
   FUNCTION_1_NAME: student-application-health-check
+  FUNCTION_1_REPOSITORY_PATH: health-check
   FUNCTION_2_NAME: student-application-auth-module
+  FUNCTION_2_REPOSITORY_PATH: auth-module
   FUNCTION_REPOSITORY_PATH: null
   VERSION_FILE: package.json
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
@@ -77,14 +79,14 @@ jobs:
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
 
-            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
+            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_1_REPOSITORY_PATH }}" >> $GITHUB_ENV
             echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           elif [[ "${INPUT_FUNCTION}" == "function-2" ]]; then
             echo "Selected function-2"
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
 
-            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
+            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_2_REPOSITORY_PATH }}" >> $GITHUB_ENV
             echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           else
             echo "Invalid function selection: "${INPUT_FUNCTION}""
