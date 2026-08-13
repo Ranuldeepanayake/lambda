@@ -1,5 +1,5 @@
 {
-  "name": "healthcheck",
+  "name": "health-check",
   "version": "0.1.0",
   "private": true,
   "description": "Test AWS Lambda function that reports request and runtime information",

@@ -54,8 +54,8 @@ env:
   SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
   NODEJS_VERSION: 24
-  FUNCTION_1_NAME: health-check
-  FUNCTION_2_NAME: auth-module
+  FUNCTION_1_NAME: student-application-health-check
+  FUNCTION_2_NAME: student-application-auth-module
   FUNCTION_REPOSITORY_PATH: null
   VERSION_FILE: package.json
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
