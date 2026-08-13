@@ -13,6 +13,7 @@ on:
         required: true
         type: choice
         options:
+          - none
           - function-1
           - function-2
       #Input to run tests.
@@ -52,14 +53,15 @@ env:
   INPUT_ACTION: ${{ github.event.inputs.INPUT_ACTION || 'build-and-deploy' }} #Default needed since the workflow will not use the input default when run on-push.
   SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
-  VERSION_FILE: package.json
-  AWS_REGION: ap-southeast-1
+  NODEJS_VERSION: 24
   FUNCTION_1_NAME: health-check
   FUNCTION_2_NAME: auth-module
-  FUNCTION_REPOSITORY_PATH: function-1
-  NODEJS_VERSION: 24
-  AWS_OIDC_ROLE_ARN: arn:aws:iam::104322896078:role/CustomRoleLambdaGithubCodeDeploy
+  FUNCTION_REPOSITORY_PATH: null
+  VERSION_FILE: package.json
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
+  AWS_REGION: ap-southeast-1
+  AWS_OIDC_ROLE_ARN: arn:aws:iam::104322896078:role/CustomRoleLambdaGithubCodeDeploy
+  AWS_ALLOWED_ACCOUNT_IDS: 104322896078
 
 jobs:
   deploy:
@@ -67,36 +69,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Select function
+        # Set parameters based on the selected function.
+      - name: Set function parameters
         run: |
           if [[ "${INPUT_FUNCTION}" == "function-1" ]]; then
             echo "Selected function-1"
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
+
+            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_1_NAME }}" >> $GITHUB_ENV
+            echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           elif [[ "${INPUT_FUNCTION}" == "function-2" ]]; then
             echo "Selected function-2"
             echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
+
+            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
+            echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           else
             echo "Invalid function selection: "${INPUT_FUNCTION}""
             exit 1
           fi
-
-          echo "Role ARN: ${AWS_OIDC_ROLE_ARN}"
-            
-        #Verify that the AWS CLI is configured correctly.
-      - name: Verify AWS CLI
+ 
+        # Validate dependencies.
+      - name: Validate dependencies
         run: |
-          aws --version
+          echo "AWS OIDC role ARN: ${AWS_OIDC_ROLE_ARN}"
+          echo "AWS role allowed account IDs: ${AWS_ALLOWED_ACCOUNT_IDS}"
+          echo "AWS CLI version: $(aws --version)"
 
-        # Checkout code repository.
+        # Checkout the code repository.
       - name: Repository checkout
         uses: actions/checkout@v5
         with:
           clean: true      #Cleans the workspace before checking out code.
           fetch-depth: 0   #Required to push back
 
-        # Setup Nodejs environment.
+        # Setup the Nodejs environment.
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
@@ -104,13 +113,14 @@ jobs:
           cache: npm
           cache-dependency-path: ${{ env.FUNCTION_REPOSITORY_PATH }}
 
-        # Check Nodejs version.
+        # Check the Nodejs version.
       - name: Check Nodejs
         run: |
-          node -v
-          npm -v
+          echo "Expected nodejs version: ${NODEJS_VERSION}"
+          echo "Installed nodejs version: $(node -v)"
+          echo "Installed npm version: $(npm -v)"
 
-        # Install dependencies.
+        # Install nodejs dependencies.
       - name: Install dependencies
         if: ${{ env.RUN_TESTS == 'false' }}
         run: | 
@@ -135,11 +145,6 @@ jobs:
             ls -la | grep "${LAMBDA_DEPLOYMENT_PACKAGE}"
           fi
 
-      # - name: Debug GitHub OIDC
-      #   uses: github/actions-oidc-debugger@main
-      #   with:
-      #     audience: sts.amazonaws.com
-
         # Configure AWS credentials using GitHub OIDC.
       - name: Configure AWS credentials
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
@@ -147,7 +152,7 @@ jobs:
         with:
           role-to-assume: ${{ env.AWS_OIDC_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          allowed-account-ids: 104322896078
+          allowed-account-ids: ${{ env.AWS_ALLOWED_ACCOUNT_IDS }}
 
         # Deploy code to the existing Lambda function.
       - name: Deploy code to Lambda function
