@@ -196,8 +196,7 @@ jobs:
           ' < "$ENV_FILE" > "${ENVIRONMENT_TEMP_FILE}"
 
           # Check if the JSON is valid and save it to a temporary file.
-          echo "$ENV_JSON" | jq empty
-          echo "$ENV_JSON" > "${ENVIRONMENT_TEMP_FILE}"
+          jq empty "${ENVIRONMENT_TEMP_FILE}"
 
           # Display the variables for debugging
           echo "Extracted environment variables: "
