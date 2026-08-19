@@ -194,14 +194,14 @@ jobs:
           echo "$ENV_JSON" > "${ENVIRONMENT_TEMP_FILE}"
 
           # Display the variables for debugging
-          echo "Extracted environment variables:"
+          echo "Extracted environment variables: "
           cat "${ENVIRONMENT_TEMP_FILE}"
 
         # Update the Lambda function's environment variables.
       - name: Update Lambda environment variables
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
-          aws lambda update-function-configuration --function-name "${LAMBDA_FUNCTION_NAME}" --environment "Variables=$(cat /tmp/lambda-env.json)"
+          aws lambda update-function-configuration --function-name "${LAMBDA_FUNCTION_NAME}" --environment "Variables=$(jq -c . "${ENVIRONMENT_TEMP_FILE}")"
 
         # Wait until the Lambda function has finished updating with the new environment variables.
       - name: Wait for Lambda function to update
