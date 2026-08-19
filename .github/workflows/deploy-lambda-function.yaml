@@ -182,12 +182,18 @@ jobs:
           set -euo pipefail
           ENV_FILE="${FUNCTION_REPOSITORY_PATH}/${DEV_ENVIRONMENT_SOURCE_FILE}"
 
-          ENV_JSON=$(
-            jq -Rn '
-              reduce (inputs | select(length > 0 and (startswith("#") | not)) | capture("^(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?<value>.*)$")) as $env
+          jq -Rn '
+          {
+            Variables: (
+              reduce (
+                inputs
+                | select(length > 0 and (startswith("#") | not))
+                | capture("^(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?<value>.*)$")
+              ) as $env
               ({}; .[$env.key] = $env.value)
-            ' < "$ENV_FILE"
-          )
+            )
+          }
+          ' < "$ENV_FILE" > "${ENVIRONMENT_TEMP_FILE}"
 
           # Check if the JSON is valid and save it to a temporary file.
           echo "$ENV_JSON" | jq empty
@@ -195,13 +201,13 @@ jobs:
 
           # Display the variables for debugging
           echo "Extracted environment variables: "
-          cat "${ENVIRONMENT_TEMP_FILE}"
+          jq . "${ENVIRONMENT_TEMP_FILE}"
 
         # Update the Lambda function's environment variables.
       - name: Update Lambda environment variables
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
-          aws lambda update-function-configuration --function-name "${LAMBDA_FUNCTION_NAME}" --environment "Variables=$(cat "${ENVIRONMENT_TEMP_FILE}")"
+          aws lambda update-function-configuration --function-name "${LAMBDA_FUNCTION_NAME}" --environment "file://${ENVIRONMENT_TEMP_FILE}"
 
         # Wait until the Lambda function has finished updating with the new environment variables.
       - name: Wait for Lambda function to update
