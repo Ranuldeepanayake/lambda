@@ -95,10 +95,10 @@ jobs:
             echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           elif [[ "${INPUT_FUNCTION}" == "function-3" ]]; then
             echo "Selected function-3"
-            echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_2_NAME }}" >> $GITHUB_ENV
+            echo "LAMBDA_FUNCTION_NAME=${{ env.FUNCTION_3_NAME }}" >> $GITHUB_ENV
             echo "Lambda function name: ${LAMBDA_FUNCTION_NAME}"
 
-            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_2_REPOSITORY_PATH }}" >> $GITHUB_ENV
+            echo "FUNCTION_REPOSITORY_PATH=${{ env.FUNCTION_3_REPOSITORY_PATH }}" >> $GITHUB_ENV
             echo "Lambda function repository path: ${FUNCTION_REPOSITORY_PATH}"
           else
             echo "Invalid function selection: "${INPUT_FUNCTION}""
