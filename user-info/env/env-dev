@@ -1,0 +1,3 @@
+JWT_AUDIENCE=authentication
+JWT_ISSUER=student-application
+JWT_SECRET=s1Gm@seCR3t
