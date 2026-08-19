@@ -1,0 +1,3 @@
+LOG_LEVEL=debug
+USE_MONGODB=false
+USE_S3=false
