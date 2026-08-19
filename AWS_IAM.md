@@ -55,19 +55,20 @@ resource "aws_iam_role" "github_actions_lambda_deploy" {
 The below policy must be added to the above role. It allows Github to perform the necessary actions on the Lambda function once the role has been assumed.
 The OIDC identity provider is AWS. The OIDC provider is Github which requests an OIDC token from AWS.  
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "DeployLambda",
-      "Effect": "Allow",
-      "Action": [
-        "lambda:GetFunction",
-        "lambda:GetFunctionConfiguration",
-        "lambda:UpdateFunctionCode"
-      ],
-      "Resource": "arn:aws:lambda:ap-southeast-1:104322896078:function:*"
-    }
-  ]
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "DeployLambda",
+			"Effect": "Allow",
+			"Action": [
+				"lambda:GetFunction",
+				"lambda:GetFunctionConfiguration",
+				"lambda:UpdateFunctionCode",
+				"lambda:UpdateFunctionConfiguration"
+			],
+			"Resource": "arn:aws:lambda:ap-southeast-1:104322896078:function:*"
+		}
+	]
 }
 
 # Using Terraform.
