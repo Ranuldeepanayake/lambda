@@ -16,6 +16,7 @@ on:
           - none
           - function-1
           - function-2
+          - function-3
       #Input to run tests.
       INPUT_ACTION:
         description: 'Select action'
@@ -58,7 +59,10 @@ env:
   FUNCTION_1_REPOSITORY_PATH: health-check
   FUNCTION_2_NAME: student-application-auth-module
   FUNCTION_2_REPOSITORY_PATH: auth-module
+  FUNCTION_3_NAME: student-application-user-info
+  FUNCTION_3_REPOSITORY_PATH: user-info
   FUNCTION_REPOSITORY_PATH: null
+  DEV_ENVIRONMENT_FILE: env/env-dev
   VERSION_FILE: package.json
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
   AWS_REGION: ap-southeast-1
@@ -165,6 +169,34 @@ jobs:
           --query '{FunctionName:FunctionName,Version:Version,CodeSha256:CodeSha256}' --output table
 
         # Wait until the Lambda function has finished updating with the new code.
+      - name: Wait for Lambda function to update
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          aws lambda wait function-updated --function-name "${LAMBDA_FUNCTION_NAME}"
+
+        # Read the Lambda environment file and convert it to JSON format for for the AWS CLI.
+      - name: Read Lambda environment file
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          set -euo pipefail
+          ENV_FILE="${FUNCTION_REPOSITORY_PATH}/${DEV_ENVIRONMENT_FILE}"
+
+          ENV_JSON=$(
+            jq -Rn '
+              reduce (inputs | select(length > 0 and (startswith("#") | not)) | capture("^(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?<value>.*)$")) as $env
+              ({}; .[$env.key] = $env.value)
+            ' < "$ENV_FILE"
+          )
+
+          echo "Read environment variables: $ENV_JSON" | jq empty
+          echo "$ENV_JSON" > /tmp/lambda-env.json
+
+      - name: Update Lambda environment variables
+        if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
+        run: |
+          aws lambda update-function-configuration --function-name "${LAMBDA_FUNCTION_NAME}" --environment "Variables=$(cat /tmp/lambda-env.json)"
+
+        # Wait until the Lambda function has finished updating with the new environment variables.
       - name: Wait for Lambda function to update
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |

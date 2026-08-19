@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import crypto from "node:crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_ISSUER = process.env.JWT_ISSUER || "my-lambda-auth";
+const JWT_ISSUER = process.env.JWT_ISSUER || "my-issuer";
 const JWT_AUDIENCE = process.env.JWT_AUDIENCE || "my-api";
 const JWT_EXPIRATION = process.env.JWT_EXPIRATION || "1h";
 
