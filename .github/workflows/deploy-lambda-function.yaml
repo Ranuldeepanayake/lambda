@@ -62,7 +62,8 @@ env:
   FUNCTION_3_NAME: student-application-user-info
   FUNCTION_3_REPOSITORY_PATH: user-info
   FUNCTION_REPOSITORY_PATH: null
-  DEV_ENVIRONMENT_FILE: env/env-dev
+  DEV_ENVIRONMENT_SOURCE_FILE: env/env-dev
+  ENVIRONMENT_TEMP_FILE: /tmp/env-lambda.json
   VERSION_FILE: package.json
   LAMBDA_DEPLOYMENT_PACKAGE: lambda.zip
   AWS_REGION: ap-southeast-1
@@ -179,7 +180,7 @@ jobs:
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
           set -euo pipefail
-          ENV_FILE="${FUNCTION_REPOSITORY_PATH}/${DEV_ENVIRONMENT_FILE}"
+          ENV_FILE="${FUNCTION_REPOSITORY_PATH}/${DEV_ENVIRONMENT_SOURCE_FILE}"
 
           ENV_JSON=$(
             jq -Rn '
@@ -188,9 +189,15 @@ jobs:
             ' < "$ENV_FILE"
           )
 
-          echo "Read environment variables: $ENV_JSON" | jq empty
-          echo "$ENV_JSON" > /tmp/lambda-env.json
+          # Check if the JSON is valid and save it to a temporary file.
+          echo "$ENV_JSON" | jq empty
+          echo "$ENV_JSON" > "${ENVIRONMENT_TEMP_FILE}"
 
+          # Display the variables for debugging
+          echo "Extracted environment variables:"
+          cat "${ENVIRONMENT_TEMP_FILE}"
+
+        # Update the Lambda function's environment variables.
       - name: Update Lambda environment variables
         if: ${{ env.INPUT_ACTION == 'build-and-deploy' }}
         run: |
