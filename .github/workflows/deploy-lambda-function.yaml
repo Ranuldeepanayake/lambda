@@ -55,11 +55,11 @@ env:
   SONAR_SCAN_ENABLE: ${{ github.event.inputs.SONAR_SCAN_ENABLE || 'true' }}
   RUN_TESTS: ${{ github.event.inputs.RUN_TESTS || 'true' }}
   NODEJS_VERSION: 24
-  FUNCTION_1_NAME: student-application-health-check
+  FUNCTION_1_NAME: student-application_health-check
   FUNCTION_1_REPOSITORY_PATH: health-check
-  FUNCTION_2_NAME: student-application-auth-module
+  FUNCTION_2_NAME: student-application_auth-module
   FUNCTION_2_REPOSITORY_PATH: auth-module
-  FUNCTION_3_NAME: student-application-user-info
+  FUNCTION_3_NAME: student-application_user-info
   FUNCTION_3_REPOSITORY_PATH: user-info
   FUNCTION_REPOSITORY_PATH: null
   DEV_ENVIRONMENT_SOURCE_FILE: env/env-dev
