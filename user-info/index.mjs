@@ -57,7 +57,11 @@ export const handler = async (event) => {
 
         // Protected secret route
         if (path === "/database") {
+            console.log("Credential route selected");
+
             try {
+                console.log("About to fetch secret");
+
                 const secretResponse = await secretsManager.send(
                     new GetSecretValueCommand({
                         SecretId: SECRET_ID
@@ -65,6 +69,7 @@ export const handler = async (event) => {
                 );
 
                 const secretValue = JSON.parse(secretResponse.SecretString);
+                console.log("Secret fetched successfully");
 
                 return response(200, {
                     db_username: secretValue.db_username,
