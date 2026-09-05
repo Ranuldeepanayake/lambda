@@ -14,6 +14,14 @@ const secretsManager = new SecretsManagerClient({});
 
 export const handler = async (event) => {
     try {
+        // Only allow POST
+        if (event.requestContext?.http?.method !== "POST" &&
+            event.httpMethod !== "POST") {
+            return response(405, {
+                error: "Method Not Allowed"
+            });
+        }
+
         // Get Authorization header
         const authHeader =
             event.headers?.authorization ||
@@ -49,18 +57,27 @@ export const handler = async (event) => {
 
         // Protected secret route
         if (path === "/database") {
-            const secretResponse = await secretsManager.send(
-                new GetSecretValueCommand({
-                    SecretId: SECRET_ID
-                })
-            );
+            try {
+                const secretResponse = await secretsManager.send(
+                    new GetSecretValueCommand({
+                        SecretId: SECRET_ID
+                    })
+                );
 
-            const secretValue = JSON.parse(secretResponse.SecretString);
+                const secretValue = JSON.parse(secretResponse.SecretString);
 
-            return response(200, {
-                db_username: secretValue.db_username,
-                db_password: secretValue.db_password
-            });
+                return response(200, {
+                    db_username: secretValue.db_username,
+                    db_password: secretValue.db_password
+                });
+
+            } catch (error) {
+                console.error("Failed to retrieve database secret:", error);
+
+                return response(500, {
+                    error: "Unable to retrieve database credentials"
+                });
+            }
         }
 
         // Existing protected route
