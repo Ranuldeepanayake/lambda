@@ -1,4 +1,4 @@
 JWT_AUDIENCE=authentication
 JWT_ISSUER=student-application
 JWT_SECRET=s1Gm@seCR3t
-SECRET_ID=placeholder
+SECRET_ID=student-application/database-credentials-e8c6563be3dad05be620cd5a9d
